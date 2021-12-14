@@ -1,0 +1,290 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>Temperature Map</title>
+
+    <!-- Load Leaflet from CDN -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+    <script src="https://unpkg.com/esri-leaflet@3.0.0/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@3.0.0/dist/esri-leaflet-vector.js"></script>
+
+    <script src="https://unpkg.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background-color: cadetblue;
+        height:100vh;
+      }
+      #container {
+        position: relative;
+        background-color: cadetblue;
+        height:100%;
+      }
+      #sidebar {
+        float: left;
+        width: 24%;
+        height: 100%;
+        min-width: 144px;
+      }
+      #layers {
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+        border-style: none none outset solid;
+        background-color: beige;
+        height: 100%;
+      }
+      #map {
+        position: relative;
+        height: 100vh;
+        width: inherit;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        color: #323232;
+      }
+
+      #submit {
+        padding: 0.5rem 1rem;
+        background: cadetblue;
+        color: #f4f4f4;
+        font-size: 20px;
+        border: none;
+        border-radius: 5px;
+        margin-top: 0.5rem;
+      }
+
+      form{
+        width:100%;
+      }
+      input {
+        padding: 0.25rem;
+        width: 100%;
+      }
+
+      label{
+        font-size:1.5rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .control-group{
+        margin: 0.5rem 0;
+      }
+
+      h4{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 1rem 0;
+        font-size:2rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="container">
+      <div id="sidebar">
+        <div id="layers">
+          <h4>Select Date Range</h4>
+          <form method="post">{% csrf_token %} {{form|crispy }}</form>
+          <button id="submit">Submit</button>
+        </div>
+      </div>
+      <div id="map"></div>
+    </div>
+    <script>
+
+document.addEventListener("DOMContentLoaded", (event)=>{
+  document.getElementById('id_start').setAttribute('type','date');
+  document.getElementById('id_end').setAttribute('type','date');
+});
+
+      const apiKey =
+        "AAPK9c144dbaf30e451e9a70129430133dd00NihSXAejT-Lau__7rvuGbIIUEzkeskW7MPfT_2J1_FJV3xNQmg-xN-tQj_IX5_S";
+      const basemapEnum = "ArcGIS:Imagery";
+
+      var map = L.map("map", {
+        minZoom: 4,
+        editable: true,
+      }).setView([44.1636, -93.9994], 13);
+
+      L.esri.Vector.vectorBasemapLayer(basemapEnum, {
+        apiKey: apiKey,
+      }).addTo(map);
+
+      // Add the Feature Layer to the map
+      var images1967 = L.esri
+        .featureLayer({
+          url: "https://services6.arcgis.com/sOgvR7QJvm9aWKVZ/ArcGIS/rest/services/DrMaryTDooleyMapLibrary_GreaterMankatoAerialImagery/FeatureServer/1",
+          simplifyFactor: 0.5,
+          precision: 4,
+          where: "1 = 0",
+          style: function (feature) {
+            // https://leafletjs.com/reference-1.7.1.html#path-option
+            return {
+              opacity: 1.0,
+              weight: 0.5,
+              color: "white",
+              fillColor: "#19A1E6",
+              fillOpacity: 0.5,
+            };
+          },
+        })
+        .addTo(map);
+
+      var images1959 = L.esri
+        .featureLayer({
+          url: "https://services6.arcgis.com/sOgvR7QJvm9aWKVZ/ArcGIS/rest/services/DrMaryTDooleyMapLibrary_GreaterMankatoAerialImagery/FeatureServer/2",
+          simplifyFactor: 0.5,
+          precision: 4,
+          where: "1 = 0",
+          style: function (feature) {
+            // https://leafletjs.com/reference-1.7.1.html#path-option
+            return {
+              opacity: 1.0,
+              weight: 0.5,
+              color: "white",
+              fillColor: "#FF0000",
+              fillOpacity: 0.5,
+            };
+          },
+        })
+        .addTo(map);
+
+      // Setup the Popup
+      images1967.bindPopup(function (layer) {
+        return L.Util.template(
+          "<b>Name: {Name}</b><br>" +
+            "Image Date: {DateCollected} <br>" +
+            '<a href={GreaterM_9} target="_blank">Link To Image</a>',
+          layer.feature.properties
+        );
+      });
+
+      // create a generic control to invoke editing
+      L.EditControl = L.Control.extend({
+        options: {
+          position: "topleft",
+          callback: null,
+          kind: "",
+          html: "",
+        },
+        //when the control is added to the map, wire up its DOM dynamically and add a click listener
+        onAdd: function (map) {
+          var container = L.DomUtil.create(
+            "div",
+            "leaflet-control leaflet-bar"
+          );
+          var link = L.DomUtil.create("a", "", container);
+          link.href = "#";
+          link.title = "Create a new " + this.options.kind;
+          link.innerHTML = this.options.html;
+          L.DomEvent.on(link, "click", L.DomEvent.stop).on(
+            link,
+            "click",
+            function () {
+              this.options.callback.call(map.editTools);
+            },
+            this
+          );
+          return container;
+        },
+      });
+
+      // extend the control to draw polygons
+      L.NewPolygonControl = L.EditControl.extend({
+        options: {
+          position: "topleft",
+          callback: map.editTools.startPolygon,
+          kind: "polygon",
+          html: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="margin: 3px;"><path d="M20 3.456L12 9.28V9H9v.433l-5-3.31V4H1v3h1v13H1v3h3v-1h16v1h3v-3h-1V4h1V1h-3zM10 10h1v1h-1zM2 5h1v1H2zm0 17v-1h1v1zm20 0h-1v-1h1zm-1-2h-1v1H4v-1H3V7h.512L9 10.632V12h3v-1.483L20.952 4H21zm1-18v1h-1V2z"/><path fill="none" d="M0 0h24v24H0z"/></svg>',
+        },
+      });
+
+      map.addControl(new L.NewPolygonControl());
+
+      var previousLayer;
+      var feature;
+      map.on("editable:drawing:end", function (e) {
+        // If this is a subsequent query, delete the previous layer
+        if (previousLayer) {
+          map.removeLayer(previousLayer);
+        }
+        previousLayer = e.layer;
+
+        // Turn the shape's edit mode off
+        e.layer.disableEdit();
+
+        // Query the geometry, get back the OBJECTIDs of the matching features,
+        // and  filter the layer based on the resultant OBJECTIDs
+        feature = e.layer.toGeoJSON();
+        localStorage.setItem(
+          "feature",
+          JSON.stringify(feature.geometry.coordinates)
+        );
+      });
+      function get_polygon_centroid(pts) {
+
+        var first = pts[0],
+          last = pts[pts.length - 1];
+        if (first[0] != last[0] || first[1] != last[1]) pts.push(first);
+        var twicearea = 0,
+          x = 0,
+          y = 0,
+          nPts = pts.length,
+          p1,
+          p2,
+          f;
+        for (var i = 0, j = nPts - 1; i < nPts; j = i++) {
+          p1 = pts[i];
+          p2 = pts[j];
+          f =
+            (p1[1] - first[1]) * (p2[0] - first[0]) -
+            (p2[1] - first[1]) * (p1[0] - first[0]);
+          twicearea += f;
+          x += (p1[0] + p2[0] - 2 * first[0]) * f;
+          y += (p1[1] + p2[1] - 2 * first[1]) * f;
+        }
+        f = twicearea * 3;
+        return { x: x / f + first[0], y: y / f + first[1] };
+      }
+
+      document.querySelector("#submit").addEventListener("click", (event) => {
+        var f = JSON.parse(localStorage.getItem("feature"));
+
+        if (!f) {
+          alert("Please draw a polygon");
+        } else {
+          f[0].pop();
+          let lang_lat = get_polygon_centroid(f[0]);
+
+          document.querySelector("#id_latitude").value = lang_lat["y"];
+          document.querySelector("#id_longititude").value = lang_lat["x"];
+          localStorage.setItem("feature", JSON.stringify(null));
+          document.querySelector("form").submit();
+        }
+      });
+    </script>
+  </body>
+</html>
