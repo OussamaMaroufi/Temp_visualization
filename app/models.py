@@ -1,3 +1,7 @@
 from django.db import models
 
-# Create your models here.
+class UserInputModel(models.Model):
+    start = models.DateField(null=False)
+    end = models.DateField(null=False)
+    latitude = models.FloatField(null=False)
+    longititude = models.FloatField(null=False)
