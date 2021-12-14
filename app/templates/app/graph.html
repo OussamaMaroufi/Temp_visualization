@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- chart js cdn  -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <title>Document</title>
+    <style>
+
+        body{
+            height: 100vh;
+            position: relative;
+        }
+      .info {
+        text-align: center;
+        margin: 2rem;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      #submit {
+        padding: 1rem 2rem;
+        background: cadetblue;
+        color: #f4f4f4;
+        font-size: 20px;
+        border-radius: 5px;
+        position: absolute;
+        bottom: 100px;
+        right: 45%;
+        font-weight: bold;
+        cursor:pointer;
+        text-decoration: none;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        
+      }
+    </style>
+  </head>
+  <body>
+    <div class="info">
+      <h1>Temperature Chart For</h1>
+      <p>Langitude: {{lon}}</p>
+      <p>Latitude:{{lat}}</p>
+    </div>
+    <div class="container">
+      <canvas width="100" height="600" id="myChart"></canvas>
+    </div>
+    <a href="." id="submit">Try It Again!</a>
+
+    <script>
+      const ctx = document.getElementById('myChart');
+      const myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+              labels: {{labels | safe }},
+              datasets: [
+                  {
+                  label: 'Average Temperature',
+                  data: {{list_avg|safe}},
+
+                  borderColor: [
+                      '#FFAB4C',
+
+                  ],
+                  borderWidth: 2
+              },
+              {
+                  label: 'Average Max Temperature',
+                  data: {{list_avg_max|safe}},
+
+                  borderColor: [
+                      '#142F43',
+
+                  ],
+                  borderWidth: 2
+
+              },
+              {
+                  label: 'Average Min Temperature',
+                  data: {{list_avg_min|safe}},
+
+                  borderColor: [
+                      'rgba(255, 99, 132, 1)',
+
+                  ],
+                  borderWidth: 2
+              }
+          ]
+          },
+          options: {
+              scales: {
+                  y: {
+                      beginAtZero: false
+                  }
+              },
+              responsive: true,
+          maintainAspectRatio: false
+
+          }
+      });
+    </script>
+  </body>
+</html>
